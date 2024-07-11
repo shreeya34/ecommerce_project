@@ -3,7 +3,10 @@ from django.http import JsonResponse
 import json
 import datetime
 from django.contrib.auth.decorators import login_required
-
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import user_passes_test
+from .models import Product
+from .forms import ProductForm
 from.utils import cookieCart,cartData,guestOrder
 from .models import *
 
@@ -100,4 +103,14 @@ def processOrder(request):
             )             
 
     return JsonResponse('Payment complete', safe=False)
- 
+
+@user_passes_test(lambda u: u.is_superuser)
+def add_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('store')
+    else:
+        form = ProductForm()
+    return render(request, 'store/add_product.html', {'form': form})
