@@ -1,4 +1,4 @@
-from django.shortcuts import render
+
 from django.http import JsonResponse
 import json
 import datetime
@@ -8,9 +8,39 @@ from django.contrib.auth.decorators import user_passes_test
 from .models import Product
 from .forms import ProductForm
 from.utils import cookieCart,cartData,guestOrder
+from django.shortcuts import render, redirect, get_object_or_404
+from .decorators import user_is_shreeys
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import *
+from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.shortcuts import render, redirect
+from .models import Customer  # Adjust this import based on your project structure
+
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            
+            # Create a Customer object for the newly created user
+            Customer.objects.create(user=user)
+            
+            login(request, user)
+            return redirect('store')  # Redirect to the store page or any other page after successful signup
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/signup.html', {'form': form})
 
 def store(request):
+    query = request.GET.get('q')
+    if query:
+        products = Product.objects.filter(name__icontains=query)
+    else:
+        products = Product.objects.all()
+        
     data = cartData(request)
     cartItems = data['cartItems'] 
     order = data['order']
@@ -20,7 +50,6 @@ def store(request):
     context = {'products': products, 'cartItems': cartItems}
     return render(request, 'store/store.html', context)
 
-	
 
 def cart(request):
         data = cartData(request)
@@ -114,3 +143,45 @@ def add_product(request):
     else:
         form = ProductForm()
     return render(request, 'store/add_product.html', {'form': form})
+
+@login_required
+@user_is_shreeys
+# @user_passes_test(lambda u: u.is_superuser)
+def admin_dashboard(request):
+    products = Product.objects.all()
+    return render(request, 'store/admin_dashboard.html', {'products': products})
+
+@user_passes_test(lambda u: u.is_superuser)
+def update_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_dashboard')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'store/update_product.html', {'form': form})
+
+@user_passes_test(lambda u: u.is_superuser)
+def delete_product(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        product.delete()
+        return redirect('admin_dashboard')
+    return render(request, 'store/delete_product.html', {'product': product})
+
+
+
+def search_results(request):
+    query = request.GET.get('q')
+    if query:
+        products = Product.objects.filter(name__icontains=query)
+    else:
+        products = Product.objects.all()
+    
+    context = {
+        'products': products,
+        'query': query,
+    }
+    return render(request, 'store/search_result.html', context)

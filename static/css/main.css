@@ -97,3 +97,9 @@ h1,h2,h3,h4,h5,h6{
 .hidden{
 	display: none!important;
 }
+
+.btn-yellow {
+    background-color: rgb(92, 92, 33) !important;
+    border-color: rgb(64, 64, 5) !important;
+    color: black !important; /* Change the text color to black */
+}

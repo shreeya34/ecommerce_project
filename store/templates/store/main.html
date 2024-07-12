@@ -64,19 +64,32 @@
 	    <ul class="navbar-nav mr-auto">
 	      <li class="nav-item active">
 	        <a class="nav-link" href="{% url 'store' %}">Store <span class="sr-only">(current)</span></a>
+			
 	      </li>
+		  
 	 
 	    </ul>
 	    <div class="form-inline my-2 my-lg-0">
-			<a href="{% url 'login' %}" class="btn btn-warning">Login</a> <!-- Updated URL -->
-	     	
+
+			<form class="form-inline" method="GET" action="{% url 'search_results' %}">
+				<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="q">
+				<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+			</form>
+			
+			<a href="{% url 'login' %}" class="btn btn-warning mr-2">Login</a> <!-- Updated URL -->
+
+
+			<a href="{% url 'signup' %}" class="btn btn-warning ml-2">SignUp</a>
+
 	     	<a href="{% url 'cart' %}">
 	    		<img  id="cart-icon" src="{% static 'images/cart.png' %}">
 	    	</a>
 	    	<p id="cart-total">{{cartItems}}</p>
 			{% if user.is_superuser %}
-				<a href="{% url 'add_product' %}" class="btn btn-success">Add Product</a>
+    			<a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-yellow">Go to Dashboard</a>
 			{% endif %}
+
+
 
 	    </div>
 	  </div>

@@ -15,6 +15,8 @@ class Product(models.Model):
     digital = models.BooleanField(default=False,null=True,blank=False)
     image = models.ImageField(upload_to='products/')  
     description = models.TextField(null=True, blank=True)  
+    in_stock = models.BooleanField(default=True)  # New field to indicate stock status
+
 
     
     def __str__(self):
