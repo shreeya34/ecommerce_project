@@ -185,3 +185,15 @@ def search_results(request):
         'query': query,
     }
     return render(request, 'store/search_result.html', context)
+
+
+def product_detail(request, id):
+    product = get_object_or_404(Product, id=id)
+    colors = product.colors.all()
+    sizes = product.sizes.all()
+    context = {
+        'product': product,
+        'colors': colors,
+        'sizes': sizes
+    }
+    return render(request, 'store/product_details.html', context)

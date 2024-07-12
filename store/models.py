@@ -31,6 +31,21 @@ class Product(models.Model):
             
         return url
 
+
+class ProductColor(models.Model):
+    product = models.ForeignKey(Product, related_name='colors', on_delete=models.CASCADE)
+    color = models.CharField(max_length=50)
+    image = models.ImageField(upload_to='products/colors/')
+
+    def __str__(self):
+        return f'{self.color} - {self.product.name}'
+
+class ProductSize(models.Model):
+    product = models.ForeignKey(Product, related_name='sizes', on_delete=models.CASCADE)
+    size = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f'{self.size} - {self.product.name}'
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
     date_order = models.DateTimeField(auto_now_add=True)
