@@ -187,13 +187,21 @@ def search_results(request):
     return render(request, 'store/search_result.html', context)
 
 
-def product_detail(request, id):
-    product = get_object_or_404(Product, id=id)
-    colors = product.colors.all()
-    sizes = product.sizes.all()
+from django.shortcuts import render, get_object_or_404
+from .models import Product
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    colors = product.colors.all()  # Get all colors associated with the product
+
+    # Prepare a dictionary to hold images for each color
+    color_images = {}
+    for color in colors:
+        color_images[color] = product.images.filter(color=color)
+
     context = {
         'product': product,
         'colors': colors,
-        'sizes': sizes
+        'color_images': color_images,  # Pass the dictionary to the template
     }
     return render(request, 'store/product_details.html', context)

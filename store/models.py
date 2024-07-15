@@ -8,7 +8,20 @@ class Customer(models.Model):
     
     def __str__(self):
         return self.name
-    
+
+
+class Color(models.Model):
+    name = models.CharField(max_length=50)
+    hex_value = models.CharField(max_length=7, null=True, blank=True)  # Optional: store the hex value for the color
+
+    def __str__(self):
+        return self.name
+
+class Size(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name  
 class Product(models.Model):
     name= models.CharField(max_length=200,null=True)
     price = models.DecimalField(max_digits=7, decimal_places=2)
@@ -16,7 +29,8 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/')  
     description = models.TextField(null=True, blank=True)  
     in_stock = models.BooleanField(default=True)  # New field to indicate stock status
-
+    colors = models.ManyToManyField(Color, related_name='products')
+    sizes = models.ManyToManyField(Size, related_name='products')
 
     
     def __str__(self):
@@ -30,22 +44,17 @@ class Product(models.Model):
             url = ''
             
         return url
-
-
-class ProductColor(models.Model):
-    product = models.ForeignKey(Product, related_name='colors', on_delete=models.CASCADE)
-    color = models.CharField(max_length=50)
-    image = models.ImageField(upload_to='products/colors/')
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='product_images/')
 
     def __str__(self):
-        return f'{self.color} - {self.product.name}'
+        return f'{self.product.name} - {self.color.name}'
+    
+class Meta:
+    unique_together = ('product', 'color') 
 
-class ProductSize(models.Model):
-    product = models.ForeignKey(Product, related_name='sizes', on_delete=models.CASCADE)
-    size = models.CharField(max_length=50)
-
-    def __str__(self):
-        return f'{self.size} - {self.product.name}'
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
     date_order = models.DateTimeField(auto_now_add=True)
