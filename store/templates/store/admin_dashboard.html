@@ -1,7 +1,17 @@
 {% extends 'store/main.html' %}
 
-
 {% block content %}
+  <style>
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .action-buttons a {
+      margin-right: 5px;
+    }
+  </style>
+
   <h2>Admin Dashboard</h2>
   <a href="{% url 'add_product' %}" class="btn btn-success">Add Product</a>
   <table class="table table-striped mt-4">
@@ -21,9 +31,10 @@
           <td>{{ product.price }}</td>
           <td>{{ product.description }}</td>
           <td>{{ product.in_stock|yesno:"Yes,No" }}</td>
-          <td>
+          <td class="action-buttons">
             <a href="{% url 'update_product' product.pk %}" class="btn btn-info btn-sm">Edit</a>
             <a href="{% url 'delete_product' product.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            <a href="{% url 'add_image' product.pk %}" class="btn btn-primary btn-sm">Add Image</a>
           </td>
         </tr>
       {% endfor %}

@@ -18,6 +18,10 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.shortcuts import render, redirect
 from .models import Customer  # Adjust this import based on your project structure
+from .forms import AddToCartForm, ReviewForm
+from .forms import ProductImageForm
+
+
 
 def signup(request):
     if request.method == 'POST':
@@ -63,39 +67,32 @@ def cart(request):
 
 @login_required(login_url='/accounts/login/')
 def checkout(request):
-        data = cartData(request)
-        cartItems = data['cartItems']
-        order = data['order']
-        items = data['items']
-        context = {'items':items, 'order':order,'cartItems':cartItems}
-        return render(request, 'store/checkout.html', context)
+    data = cartData(request)
+    context = {'items': data['items'], 'order': data['order'], 'cartItems': data['cartItems']}
+    return render(request, 'store/checkout.html', context)
 
 def updateItem(request):
     data = json.loads(request.body)
     productId = data['productId']
     action = data['action']
-    print('Action:',action)
-    print('Product:', productId)
-    
+
     customer = request.user.customer
     product = Product.objects.get(id=productId)
-    order,created = Order.objects.get_or_create(customer=customer, complete=False)
-    
+    order, created = Order.objects.get_or_create(customer=customer, complete=False)
     orderItem, created = OrderItem.objects.get_or_create(order=order, product=product)
-    
+
     if action == 'add':
-        orderItem.quantity = (orderItem.quantity+1)
+        orderItem.quantity = (orderItem.quantity + 1)
     elif action == 'remove':
-        orderItem.quantity = (orderItem.quantity-1)
-        
+        orderItem.quantity = (orderItem.quantity - 1)
+
     orderItem.save()
-    
-    if orderItem.quantity <=0:
+
+    if orderItem.quantity <= 0:
         orderItem.delete()
-    
+
     return JsonResponse('Item was added', safe=False)
-
-
+   
 from django.views.decorators.csrf import csrf_exempt
 
 # @csrf_exempt
@@ -144,6 +141,9 @@ def add_product(request):
         form = ProductForm()
     return render(request, 'store/add_product.html', {'form': form})
 
+
+
+
 @login_required
 @user_is_shreeys
 # @user_passes_test(lambda u: u.is_superuser)
@@ -186,22 +186,67 @@ def search_results(request):
     }
     return render(request, 'store/search_result.html', context)
 
-
-from django.shortcuts import render, get_object_or_404
-from .models import Product
-
+import logging
+logger = logging.getLogger(__name__)
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    colors = product.colors.all()  # Get all colors associated with the product
-
-    # Prepare a dictionary to hold images for each color
-    color_images = {}
-    for color in colors:
-        color_images[color] = product.images.filter(color=color)
-
+    
+    # Initialize forms
+    form = AddToCartForm()
+    review_form = ReviewForm()
+    
+    if request.method == 'POST':
+        form = AddToCartForm(request.POST)
+        review_form = ReviewForm(request.POST)
+        
+        if form.is_valid():
+            quantity = form.cleaned_data['quantity']
+            cart = json.loads(request.COOKIES.get('cart', '{}'))
+            
+            if str(product.id) not in cart:
+                cart[str(product.id)] = {'quantity': 0}
+            
+            cart[str(product.id)]['quantity'] += quantity
+            
+            # Save updated cart in cookies
+            response = redirect('cart')
+            response.set_cookie('cart', json.dumps(cart))
+            return response
+        
+        elif review_form.is_valid():
+            if request.user.is_authenticated:
+                review = review_form.save(commit=False)
+                review.user = request.user
+                review.product = product
+                review.save()
+                return redirect('product_detail', product_id=product.id)
+            else:
+                return redirect('login')
+    
+    # Context for rendering the template
     context = {
         'product': product,
-        'colors': colors,
-        'color_images': color_images,  # Pass the dictionary to the template
+        'form': form,
+        'review_form': review_form,
+        'reviews': product.reviews.all(),
     }
+    
+    # Logging to debug and trace variable values
+    logger.debug(f'Product ID: {product.id}, Form Errors: {form.errors if form.errors else "None"}, Cart: {json.loads(request.COOKIES.get("cart", "{}"))}')
+    
     return render(request, 'store/product_details.html', context)
+
+def add_image(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == 'POST':
+        form = ProductImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            image = form.save(commit=False)
+            image.product = product
+            image.color = form.cleaned_data['color']  # Ensure color is set
+            image.save()
+            return redirect('admin_dashboard')
+    else:
+        form = ProductImageForm()
+    
+    return render(request, 'store/add_image.html', {'form': form, 'product': product})

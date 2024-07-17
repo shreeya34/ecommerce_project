@@ -53,7 +53,13 @@ class ProductImage(models.Model):
         return f'{self.product.name} - {self.color.name}'
     
 class Meta:
-    unique_together = ('product', 'color') 
+        unique_together = ('product', 'color') 
+        
+class ProductOption(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='options')
+    option_name = models.CharField(max_length=255)
+    option_value = models.CharField(max_length=255)
+
 
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, blank=True, null=True)
@@ -111,6 +117,13 @@ class ShippingAddress(models.Model):
     
     def __str__(self):
         return self.address
+    
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])  # Rating from 1 to 5
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
     
 
     

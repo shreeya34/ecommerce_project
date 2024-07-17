@@ -1,47 +1,141 @@
 <!-- store/product_detail.html -->
 {% extends 'store/main.html' %}
+{% load custom_filters %}
 {% block content %}
-<div class="product-detail">
-    <img src="{{ product.imageURL }}" alt="{{ product.name }}">
-    <h2>{{ product.name }}</h2>
-    <p>{{ product.description }}</p>
-    <h4>${{ product.price|floatformat:2 }}</h4>
 
-    <div class="product-options">
-        {% for color in colors %}
-            <div class="product-color" id="product-color-{{ color.id }}">
-                <h5>{{ color.name }}</h5>
-                {% for image in color_images.color %}
-                    <img src="{{ product.imageURL }}" alt="{{ product.name }}"> - {{ color.name }}" style="display: none;">
-                {% endfor %}
-            </div>
-        {% endfor %}
-
-        <div class="product-sizes">
-            <h5>Available Sizes:</h5>
-            <ul>
-                {% for size in sizes %}
-                    <li>{{ size.name }}</li>
-                {% endfor %}
-            </ul>
+<div class="product-detail-container">
+    <div class="product-left">
+        <img src="{{ product.imageURL }}" alt="{{ product.name }}" class="main-image" id="mainImage">
+        <div class="additional-images">
+            {% for image in product.images.all %}
+                <img src="{{ image.image.url }}" alt="{{ product.name }}" class="additional-image" onclick="updateMainImage('{{ image.image.url }}')">
+            {% endfor %}
         </div>
     </div>
+    <div class="product-right">
+        <h1>{{ product.name }}</h1>
+        <p>{{ product.description }}</p>
+        <p>Price: ${{ product.price }}</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button data-product="{{ product.id }}" data-action="add" class="btn btn-green add-btn update-cart">Add to Cart</button>
+        </form>
 
-    <button data-product="{{ product.id }}" data-action="add" class="btn btn-outline-secondary add-btn update-cart">Add to Cart</button>
+        <div>
+            {% for option in product.options.all %}
+                <p>{{ option.option_name }}: {{ option.option_value }}</p>
+            {% endfor %}
+        </div>
+
+        {% if user.is_authenticated %}
+            <h3>Write a Review</h3>
+            <form method="post">
+                {% csrf_token %}
+                <div class="rating">
+                    <input type="hidden" name="rating" id="rating" value="0">
+                    <i class="fas fa-star" data-value="1"></i>
+                    <i class="fas fa-star" data-value="2"></i>
+                    <i class="fas fa-star" data-value="3"></i>
+                    <i class="fas fa-star" data-value="4"></i>
+                    <i class="fas fa-star" data-value="5"></i>
+                </div>
+                {{ review_form.comment.label_tag }} {{ review_form.comment }}
+                <button type="submit" class="btn-green">Submit Review</button>
+            </form>
+        {% else %}
+            <p><a href="{% url 'login' %}">Log in</a> to write a review.</p>
+        {% endif %}
+
+        <div>
+            <h3>Reviews</h3>
+            {% for review in reviews %}
+                <div>
+                    <strong>{{ review.user.username }}</strong>
+                    <p>Rating: 
+                        {% for i in review.rating|range_filter %}<i class="fas fa-star checked"></i>{% endfor %}
+                        {% for i in 5|add:review.rating|abs_filter|range_filter %}<i class="fas fa-star"></i>{% endfor %}
+                    </p>
+                    <p>{{ review.comment }}</p>
+                    <p>{{ review.created_at }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 <script>
-// JavaScript to handle image switching based on selected color
-document.addEventListener('DOMContentLoaded', function() {
-    const colorOptions = document.querySelectorAll('.product-color');
-    colorOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            const colorName = option.querySelector('h5').textContent.trim();
-            const images = document.querySelectorAll('.product-color');
-            images.forEach(img => img.style.display = 'none');
-            option.style.display = 'block';
+    function updateMainImage(imageUrl) {
+        document.getElementById('mainImage').src = imageUrl;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.rating .fa-star');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-value');
+                document.getElementById('rating').value = rating;
+                stars.forEach(s => {
+                    s.classList.remove('checked');
+                    if (s.getAttribute('data-value') <= rating) {
+                        s.classList.add('checked');
+                    }
+                });
+            });
         });
     });
-});
 </script>
-{% endblock content %}
+
+<style>
+    .product-detail-container {
+        display: flex;
+        gap: 30px;
+    }
+    .product-left {
+        flex: 1;
+    }
+    .product-right {
+        flex: 1;
+        margin-left: 20px;
+    }
+    .main-image {
+        max-width: 100%;
+        display: block;
+        margin-bottom: 10px;
+    }
+    .additional-images .additional-image {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        display: inline-block;
+        margin-right: 10px;
+        cursor: pointer;
+        border: 2px solid #ddd; /* Adding border */
+        border-radius: 5px; /* Optional: Adding border radius for rounded corners */
+    }
+    .additional-images .additional-image:hover {
+        border-color: #f39c12; /* Changing border color on hover */
+    }
+    .rating .fa-star {
+        cursor: pointer;
+        color: #ddd;
+    }
+    .rating .fa-star.checked {
+        color: #f39c12;
+    }
+    .rating .fa-star:hover {
+        color: #f39c12;
+    }
+    .btn-green {
+        background-color: green;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+    .btn-green:hover {
+        background-color: darkgreen;
+    }
+</style>
+
+{% endblock %}
