@@ -1,6 +1,7 @@
-<!-- store/product_detail.html -->
 {% extends 'store/main.html' %}
 {% load custom_filters %}
+{% load static %}
+
 {% block content %}
 
 <div class="product-detail-container">
@@ -19,6 +20,7 @@
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
+            <input type="hidden" id="selectedImageURL" name="selectedImageURL" value="{{ product.imageURL }}">
             <button data-product="{{ product.id }}" data-action="add" class="btn btn-green add-btn update-cart">Add to Cart</button>
         </form>
 
@@ -65,8 +67,10 @@
 </div>
 
 <script>
+    // Function to update main image and selectedImageURL when clicking on additional images
     function updateMainImage(imageUrl) {
         document.getElementById('mainImage').src = imageUrl;
+        document.getElementById('selectedImageURL').value = imageUrl;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -81,6 +85,42 @@
                         s.classList.add('checked');
                     }
                 });
+            });
+        });
+
+        // Function to handle updating cart with selected image URL
+        const addToCartBtn = document.querySelector('.update-cart');
+        addToCartBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            const productId = this.getAttribute('data-product');
+            const action = this.getAttribute('data-action');
+            const selectedImageURL = document.getElementById('selectedImageURL').value;
+            updateUserOrder(productId, action, selectedImageURL);
+        });
+
+        function updateUserOrder(productId, action, selectedImageURL) {
+            const url = '/update_item/';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({'productId': productId, 'action': action, 'imageURL': selectedImageURL}),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                location.reload();
+            });
+        }
+
+        // Event listeners for additional images to update main image and selectedImageURL
+        const additionalImages = document.querySelectorAll('.additional-image');
+        additionalImages.forEach(image => {
+            image.addEventListener('click', function() {
+                const imageUrl = this.getAttribute('src');
+                updateMainImage(imageUrl);
             });
         });
     });

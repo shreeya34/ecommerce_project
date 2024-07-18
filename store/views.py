@@ -187,41 +187,53 @@ def search_results(request):
     return render(request, 'store/search_result.html', context)
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 def product_detail(request, product_id):
+    # Retrieve cart data
+    data = cartData(request)
+    cartItems = data['cartItems']
+    order = data['order']
+    items = data['items']
+    
+    # Retrieve product or return 404 if not found
     product = get_object_or_404(Product, id=product_id)
     
     # Initialize forms
     form = AddToCartForm()
     review_form = ReviewForm()
     
+    # Process POST requests
     if request.method == 'POST':
-        form = AddToCartForm(request.POST)
-        review_form = ReviewForm(request.POST)
-        
-        if form.is_valid():
-            quantity = form.cleaned_data['quantity']
-            cart = json.loads(request.COOKIES.get('cart', '{}'))
+        if 'add_to_cart' in request.POST:
+            form = AddToCartForm(request.POST)
+            if form.is_valid():
+                quantity = form.cleaned_data['quantity']
+                
+                # Update or initialize cart data from cookies
+                cart = json.loads(request.COOKIES.get('cart', '{}'))
+                if str(product.id) not in cart:
+                    cart[str(product.id)] = {'quantity': 0}
+                
+                cart[str(product.id)]['quantity'] += quantity
+                
+                # Save updated cart in cookies
+                response = redirect('cart')
+                response.set_cookie('cart', json.dumps(cart))
+                return response
             
-            if str(product.id) not in cart:
-                cart[str(product.id)] = {'quantity': 0}
-            
-            cart[str(product.id)]['quantity'] += quantity
-            
-            # Save updated cart in cookies
-            response = redirect('cart')
-            response.set_cookie('cart', json.dumps(cart))
-            return response
-        
-        elif review_form.is_valid():
-            if request.user.is_authenticated:
-                review = review_form.save(commit=False)
-                review.user = request.user
-                review.product = product
-                review.save()
-                return redirect('product_detail', product_id=product.id)
-            else:
-                return redirect('login')
+        elif 'submit_review' in request.POST:
+            review_form = ReviewForm(request.POST)
+            if review_form.is_valid():
+                if request.user.is_authenticated:
+                    review = review_form.save(commit=False)
+                    review.user = request.user
+                    review.product = product
+                    review.save()
+                    return redirect('product_detail', product_id=product.id)
+                else:
+                    return redirect('login')
     
     # Context for rendering the template
     context = {
@@ -229,9 +241,12 @@ def product_detail(request, product_id):
         'form': form,
         'review_form': review_form,
         'reviews': product.reviews.all(),
+        'cartItems': cartItems,
+        'order': order,
+        'items': items,
     }
     
-    # Logging to debug and trace variable values
+    # Logging for debugging
     logger.debug(f'Product ID: {product.id}, Form Errors: {form.errors if form.errors else "None"}, Cart: {json.loads(request.COOKIES.get("cart", "{}"))}')
     
     return render(request, 'store/product_details.html', context)

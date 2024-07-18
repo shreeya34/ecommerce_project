@@ -23,26 +23,24 @@ class Size(models.Model):
     def __str__(self):
         return self.name  
 class Product(models.Model):
-    name= models.CharField(max_length=200,null=True)
+    name = models.CharField(max_length=200, null=True)
     price = models.DecimalField(max_digits=7, decimal_places=2)
-    digital = models.BooleanField(default=False,null=True,blank=False)
-    image = models.ImageField(upload_to='products/')  
-    description = models.TextField(null=True, blank=True)  
-    in_stock = models.BooleanField(default=True)  # New field to indicate stock status
+    digital = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='products/')
+    description = models.TextField(null=True, blank=True)
+    in_stock = models.BooleanField(default=True)
     colors = models.ManyToManyField(Color, related_name='products')
     sizes = models.ManyToManyField(Size, related_name='products')
 
-    
     def __str__(self):
         return self.name
-    
+
     @property
     def imageURL(self):
         try:
             url = self.image.url
         except:
-            url = ''
-            
+            url = ''  # Provide a default URL or handle the exception as per your application's needs
         return url
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
