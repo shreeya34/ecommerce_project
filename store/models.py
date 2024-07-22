@@ -1,11 +1,29 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 class Customer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True,blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True)
     email = models.CharField(max_length=200, null=True)
     
+    def __str__(self):
+        return self.name
+@receiver(post_save, sender=User)
+def create_customer(sender, instance, created, **kwargs):
+    if created:
+        Customer.objects.create(user=instance, name=instance.username, email=instance.email)
+from django.utils.text import slugify
+
+class Category(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -31,6 +49,10 @@ class Product(models.Model):
     in_stock = models.BooleanField(default=True)
     colors = models.ManyToManyField(Color, related_name='products')
     sizes = models.ManyToManyField(Size, related_name='products')
+    category = models.ForeignKey(Category, on_delete=models.SET_DEFAULT, default=1)
+
+    def __str__(self):
+        return self.name
 
     def __str__(self):
         return self.name
@@ -95,7 +117,12 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, blank=True, null=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
+    image_url = models.CharField(max_length=200, null=True, blank=True)  # Add this line
 
+
+    def __str__(self):
+        return str(self.product.name)
+    
     @property
     def get_total(self):
         if self.product and self.product.price:

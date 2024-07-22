@@ -5,7 +5,8 @@ import datetime
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
-from .models import Product
+import requests
+from .models import Product,Category
 from .forms import ProductForm
 from.utils import cookieCart,cartData,guestOrder
 from django.shortcuts import render, redirect, get_object_or_404
@@ -71,6 +72,8 @@ def checkout(request):
     context = {'items': data['items'], 'order': data['order'], 'cartItems': data['cartItems']}
     return render(request, 'store/checkout.html', context)
 
+from django.shortcuts import get_object_or_404
+
 def updateItem(request):
     data = json.loads(request.body)
     productId = data['productId']
@@ -130,6 +133,57 @@ def processOrder(request):
 
     return JsonResponse('Payment complete', safe=False)
 
+import hashlib
+
+def generate_signature(amount, ref_id, product_code, secret_key):
+    
+    data_string = f"{amount}{ref_id}{product_code}"
+
+    data_string += secret_key
+    
+    signature = hashlib.sha256(data_string.encode()).hexdigest()
+    return signature
+
+def esewa_success(request):
+    # Extract parameters from request
+    oid = request.GET.get('oid')
+    amt = request.GET.get('amt')
+    refId = request.GET.get('refId')
+    scd = 'EPAYTEST'  # Replace with your actual merchant code
+    secret_key = '8gBm/:&EnhH.1/q'  # Your eSewa secret key
+
+    # Prepare the data for validation
+    data = {
+        'amt': amt,
+        'rid': refId,
+        'pid': oid,
+        'scd': scd,
+        'signature': None,  # This will be calculated
+    }
+
+    # Generate the signature
+    data['signature'] = generate_signature(data['amt'], data['rid'], data['pid'], secret_key)
+
+    # Send a POST request for transaction verification
+    url = "https://uat.esewa.com.np/epay/transrec"
+    response = requests.post(url, data=data)
+    status = response.text.strip()
+
+    # Check response
+    if "Success" in status:
+        order = Order.objects.get(id=oid)
+        order.complete = True
+        order.payment_status = "Completed"
+        order.transaction_id = refId
+        order.payment_method = "eSewa"
+        order.save()
+        return redirect('order_complete')
+    else:
+        return redirect('order_failed')
+    
+def esewa_failure(request):
+    return render(request, 'store/esewa_failure.html')
+
 @user_passes_test(lambda u: u.is_superuser)
 def add_product(request):
     if request.method == 'POST':
@@ -142,8 +196,24 @@ def add_product(request):
     return render(request, 'store/add_product.html', {'form': form})
 
 
+def about_us(request):
+    return render(request, 'store/about_us.html')
 
+def contact_us(request):
+    return render(request, 'store/contact_us.html')
 
+def category_list_view(request):
+    categories = Category.objects.all()
+    if request.method == 'GET' and 'category' in request.GET:
+        slug = request.GET['category']
+        if slug:
+            return redirect('category_detail', slug=slug)
+    return render(request, 'store/category_list.html', {'categories': categories})
+
+def category_detail_view(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    # Pass category and any other required context to your template
+    return render(request, 'store/category_detail.html', {'category': category})
 @login_required
 @user_is_shreeys
 # @user_passes_test(lambda u: u.is_superuser)
@@ -265,3 +335,4 @@ def add_image(request, product_id):
         form = ProductImageForm()
     
     return render(request, 'store/add_image.html', {'form': form, 'product': product})
+

@@ -16,6 +16,12 @@ urlpatterns = [
     path('search/', views.search_results, name='search_results'), 
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('add_image/<int:product_id>/', views.add_image, name='add_image'),
+    path('esewa/success/', views.esewa_success, name='esewa_success'),
+    path('esewa/failure/', views.esewa_failure, name='esewa_failure'),
+    path('about-us/', views.about_us, name='about_us'),
+    path('contact-us/', views.contact_us, name='contact_us'),
+    path('categories/', views.category_list_view, name='category_list_view'),
+    path('categories/<slug:slug>/', views.category_detail_view, name='category_detail'),
 
   
 ]

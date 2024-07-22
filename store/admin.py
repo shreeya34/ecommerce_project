@@ -4,7 +4,12 @@
 from .models import *
 from django.contrib import admin
 from .models import Product, ProductImage, ProductOption,Review
+from .models import Category
 
+class CategoryAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug': ('name',)}
+
+admin.site.register(Category, CategoryAdmin)
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
