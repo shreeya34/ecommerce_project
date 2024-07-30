@@ -23,46 +23,13 @@
             background-color: rgb(74, 230, 74);
             border-color: rgb(77, 221, 77);
         }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
     </style>
-
-    <script type="text/javascript">
-        var user = '{{ request.user }}'
-
-        function getToken(name){
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== ''){
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++){
-                    var cookie = cookies[i].trim();
-
-                    if (cookie.substring(0, name.length+1) === (name + '=')){
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        var csrftoken = getToken('csrftoken');
-
-        function getCookie(name){
-            var cookieArr = document.cookie.split(";");
-            for (var i = 0; i < cookieArr.length; i++){
-                var cookiePair = cookieArr[i].split("=");
-                if (name == cookiePair[0].trim()){
-                    return decodeURIComponent(cookiePair[1])
-                }
-            }
-            return null;
-        }
-        var cart = JSON.parse(getCookie('cart'))
-        if(cart == undefined){
-            cart = {}
-            console.log('cart was created')
-            document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
-        }
-        console.log('cart', cart)
-    </script>
 </head>
 <body>
 
@@ -92,9 +59,17 @@
                     <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="q">
                     <button class="btn btn-outline-success my-2 my-sm-0 mr-2" type="submit">Search</button>
                 </form>
-    
-                <a href="{% url 'login' %}" class="btn btn-custom mr-2">Login</a>
-                <a href="{% url 'signup' %}" class="btn btn-custom ml-2">SignUp</a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="btn mr-2">
+                        <img src="{{ user.profile.image.url }}" class="profile-pic" alt="{{ user.username }}">
+                    </a>
+                    <a href="{% url 'logout' %}" class="btn btn-custom ml-2">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-custom mr-2">Login</a>
+                    <a href="{% url 'signup' %}" class="btn btn-custom ml-2">SignUp</a>
+                {% endif %}
+                
                 <a href="{% url 'cart' %}">
                     <img id="cart-icon" src="{% static 'images/cart.png' %}">
                 </a>
@@ -105,13 +80,17 @@
             </div>
         </div>
     </nav>
-    
 
     <div class="container">
         <br>
         {% block content %}
         {% endblock content %}
     </div>
+
+    <script type="text/javascript">
+        var user = "{{ user.username|default:'AnonymousUser' }}"; // Ensure user is set
+        var csrftoken = "{{ csrf_token }}"; // Ensure CSRF token is set
+    </script>
 
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>

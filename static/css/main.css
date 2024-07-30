@@ -118,3 +118,15 @@ h1,h2,h3,h4,h5,h6{
 .page-content p {
     color: #666; /* Slightly lighter text color for paragraph text */
 }
+
+.btn-green {
+    color: white;
+    background-color: green;
+    border-color: green;
+}
+
+.btn-green:hover {
+    color: white;
+    background-color: rgb(74, 230, 74);
+    border-color: rgb(77, 221, 77);
+}
