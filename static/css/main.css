@@ -130,3 +130,93 @@ h1,h2,h3,h4,h5,h6{
     background-color: rgb(74, 230, 74);
     border-color: rgb(77, 221, 77);
 }
+
+.profile-update-box {
+    border: 2px solid #ccc; /* Border color and width */
+    border-radius: 8px; /* Rounded corners */
+    padding: 20px; /* Space inside the box */
+    max-width: 400px; /* Maximum width of the box */
+    margin: 0 auto; /* Center the box */
+    background-color: #f9f9f9; /* Light background color */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.profile-update-box h1 {
+    text-align: center; /* Center the heading */
+    margin-bottom: 20px; /* Space below the heading */
+}
+
+.profile-update-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between form elements */
+}
+
+.profile-update-box button {
+    padding: 10px;
+    background-color: #4CAF50; /* Button background color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.profile-update-box button:hover {
+    background-color: #45a049; /* Button color on hover */
+}
+
+.profile-update-box a {
+    display: block;
+    margin-top: 15px;
+    text-align: center;
+    color: #007bff; /* Link color */
+}
+
+.profile-update-box a:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
+.profile-update-box {
+    border: 2px solid #ccc; /* Border color and width */
+    border-radius: 8px; /* Rounded corners */
+    padding: 20px; /* Space inside the box */
+    max-width: 400px; /* Maximum width of the box */
+    margin: 0 auto; /* Center the box */
+    background-color: #f9f9f9; /* Light background color */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.profile-update-box h1 {
+    text-align: center; /* Center the heading */
+    margin-bottom: 20px; /* Space below the heading */
+}
+
+.profile-update-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between form elements */
+}
+
+.profile-update-box button {
+    padding: 10px;
+    background-color: #4CAF50; /* Button background color */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.profile-update-box button:hover {
+    background-color: #45a049; /* Button color on hover */
+}
+
+.profile-update-box a {
+    display: block;
+    margin-top: 15px;
+    text-align: center;
+    color: #007bff; /* Link color */
+}
+
+.profile-update-box a:hover {
+    text-decoration: underline; /* Underline on hover */
+}
